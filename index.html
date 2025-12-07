@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ESIC Employee Database</title>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>ESIC Employee Database</h1>
+
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div>
+          <span id="empCount">0</span>
+          <span class="status" id="statusText"></span>
+        </div>
+
+        <button class="btn-primary btn-small" id="addEmpBtn">+ Add Employee</button>
+
+        <!-- Only Download button now -->
+        <button class="btn-secondary btn-small" id="downloadBtn" type="button">
+          Download Excel
+        </button>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by ID / Name / Group / Branch / Status..."
+        />
+      </div>
+    </div>
+
+    <!-- Group-wise Dashboard (cards) -->
+    <div class="dash-card">
+      <h3 style="margin-top:8px;font-size:12px;font-weight:600;color:#1d4ed8;">Officers/Officials</h3>
+      <div class="dash-card-row" id="dashCardRow"></div>
+
+      <!-- Status-wise Pending Summary cards -->
+      <div style="margin-top:8px;font-size:12px;font-weight:600;color:#1d4ed8;">
+        Pending Summary
+      </div>
+      <div class="dash-card-row" id="statusCardRow"></div>
+    </div>
+
+    <!-- MAIN TABLE: only basic columns -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Emp ID</th>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>Branch</th>
+          </tr>
+        </thead>
+      <tbody id="employeeTableBody">
+    <!-- JS will insert rows here -->
+  </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- POPUP / MODAL FOR VIEW / EDIT EMPLOYEE -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle">Add Employee</span>
+        <button class="modal-close" id="modalCloseBtn" title="Close">&times;</button>
+      </div>
+      <div class="form-card">
+        <div
+          style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"
+        >
+          <strong style="font-size:13px;">Details</strong>
+       
+        </div>
+
+        <!-- EMPLOYEE FORM GRID -->
+        <div class="form-grid">
+          <!-- Basic details -->
+          <div class="field">
+            <label for="empId">Emp ID *</label>
+            <input type="text" id="empId" />
+          </div>
+          <div class="field">
+            <label for="empName">Officer / Official Name *</label>
+            <input type="text" id="empName" />
+          </div>
+          <div class="field">
+            <label for="empDesignation">Designation</label>
+            <input type="text" id="empDesignation" />
+          </div>
+          <div class="field">
+            <label for="empGroup">Group</label>
+            <input type="text" id="empGroup" />
+          </div>
+          <div class="field">
+            <label for="empBranch">Branch</label>
+            <input type="text" id="empBranch" />
+          </div>
+          <div class="field">
+            <label for="empGender">Gender</label>
+            <input type="text" id="empGender" />
+          </div>
+          <div class="field">
+            <label for="empDob">DoB</label>
+            <input type="text" id="empDob" placeholder="dd-mm-yyyy" />
+          </div>
+          <div class="field">
+            <label for="empRetirement">Retirement</label>
+            <input type="text" id="empRetirement" placeholder="dd-mm-yyyy" />
+          </div>
+          <div class="field">
+            <label for="empDojBranch">DoJ (Branch)</label>
+            <input type="text" id="empDojBranch" placeholder="dd-mm-yyyy" />
+          </div>
+          <div class="field">
+            <label for="empDojAU">DoJ (Accounting Unit)</label>
+            <input type="text" id="empDojAU" placeholder="dd-mm-yyyy" />
+          </div>
+          <div class="field">
+            <label for="empContact">Contact Details</label>
+            <input type="text" id="empContact" />
+          </div>
+          <br>
+          <!-- Status (no dates now) -->
+          <div class="field">
+            <label for="empProbationStatus">Probation Status</label>
+            <select id="empProbationStatus">
+              <option value="">-- Select --</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Not Applicable">Not Applicable</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="empCharacterStatus">Police Verification Status</label>
+            <select id="empCharacterStatus">
+              <option value="">-- Select --</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Not Applicable">Not Applicable</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="empCasteStatus">Caste Verification Status</label>
+            <select id="empCasteStatus">
+              <option value="">-- Select --</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Not Applicable">Not Applicable</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="empConfirmationStatus">Confirmation Status</label>
+            <select id="empConfirmationStatus">
+              <option value="">-- Select --</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Not Applicable">Not Applicable</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- === TRANSFER HISTORY SECTION (NEW) === -->
+        <hr style="margin:12px 0;" />
+        <div class="transfer-section">
+          <strong style="font-size:13px;display:block;margin-bottom:6px;">
+            Transfer History
+          </strong>
+
+          <!-- Existing transfer rows -->
+          <div class="table-wrapper" style="max-height:220px;overflow:auto;">
+            <table class="transfer-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">Sl. No.</th>
+                  <th>Order No.</th>
+                  <th>Order Date</th>
+                  <th>Branch</th>
+                  <th>From Date</th>
+                  <th>To Date</th>
+                  <th>Tenure completed</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="transferTableBody">
+                <tr>
+                  <td colspan="8" class="status">
+                    Save the employee and then add transfer records.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Add transfer form -->
+         <div class="form-grid" style="margin-top:8px;">
+            <div class="field">
+    <label for="tfOrderNo">Order No.</label>
+    <input type="text" id="tfOrderNo" placeholder="e.g. 203 of 2025" />
+  </div>
+
+  <div class="field">
+    <label for="tfOrderDate">Order Date</label>
+    <input type="date" id="tfOrderDate" />
+  </div>
+  <div class="field">
+    <label for="tfBranch">Branch</label>
+    <input type="text" id="tfBranch" placeholder="e.g. Establishment Branch" />
+  </div>
+
+  <div class="field">
+    <label for="tfFromDate">From Date</label>
+    <input type="date" id="tfFromDate" />
+  </div>
+
+  <div class="field">
+    <label for="tfToDate">To Date</label>
+    <input type="date" id="tfToDate" />
+  </div>
+
+ 
+</div>
+
+          <div
+            style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"
+          >
+            <span id="transferStatusText" class="status"></span>
+            <button class="btn-primary btn-small" type="button" id="addTransferBtn">
+              + Add Transfer
+            </button>
+          </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="buttons">
+          <button class="btn-primary" id="saveBtn">Save</button>
+          <button class="btn-secondary" id="editBtn" type="button">Edit</button>
+          <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
+          <button class="btn-danger" id="deleteBtn" disabled>Delete</button>
+
+          <!-- CSV Import -->
+          <button class="btn-secondary" id="importBtn" type="button">Import CSV</button>
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
+        </div>
+
+        <div id="modalStatus" class="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Main logic -->
+  <script src="app.js"></script>
+</body>
+</html>
