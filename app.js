@@ -563,7 +563,7 @@ function downloadFilteredToExcel() {
       e.branch || "",
       e.gender || "",
       e.dob || "",
-      e.retirementDate || "",
+      e.retirement || "",
       e.dojBranch || "",
       e.dojAU || "",
       e.contact || "",
