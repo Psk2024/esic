@@ -25,6 +25,7 @@ function setText(id, text) {
 function safeLower(v) {
   return (v || "").toString().toLowerCase();
 }
+
 function applyPendingHighlight(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -35,6 +36,7 @@ function applyPendingHighlight(id, value) {
     el.classList.remove("red-pending");
   }
 }
+
 /* ===== tenure helper (days) ===== */
 function computeTenureYMD(fromDate, toDate) {
   if (!fromDate || !toDate) return "";
@@ -47,7 +49,6 @@ function computeTenureYMD(fromDate, toDate) {
   let months = end.getMonth() - start.getMonth();
   let days = end.getDate() - start.getDate();
 
-  // Adjust month and day values when needed
   if (days < 0) {
     months--;
     const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0).getDate();
@@ -66,16 +67,33 @@ function computeTenureYMD(fromDate, toDate) {
 
   return output.trim();
 }
-function applyPendingHighlight(id, value) {
-  const el = document.getElementById(id);
-  if (!el) return;
 
-  if ((value || "").toLowerCase() === "pending") {
-    el.classList.add("red-pending");
-  } else {
-    el.classList.remove("red-pending");
+/* ===== Date formatting helper: DD-MM-YYYY ===== */
+function formatDateToDDMMYYYY(value) {
+  if (!value) return "";
+
+  // If Excel gives a serial number
+  if (typeof value === "number" && !isNaN(value)) {
+    const excelEpoch = new Date(1899, 11, 30); // 30-Dec-1899
+    const date = new Date(excelEpoch.getTime() + value * 86400000);
+    return date.toLocaleDateString("en-GB"); // DD/MM/YYYY
   }
+
+  // If already a Date object
+  if (value instanceof Date) {
+    return value.toLocaleDateString("en-GB");
+  }
+
+  // If it's a string – try to parse
+  const parsed = new Date(value);
+  if (!isNaN(parsed)) {
+    return parsed.toLocaleDateString("en-GB");
+  }
+
+  // Fallback (leave as is)
+  return value.toString();
 }
+
 /* ================== State ================== */
 let employees = [];
 let currentGroupFilter = "ALL"; // ALL | A | B | C
@@ -92,9 +110,10 @@ async function loadEmployees() {
   setText("statusText", "Loading employees...");
 
   try {
-    const snap = await db.collection("employees")
-                         .orderBy("empId", "asc")   // <-- ADD HERE
-                         .get();
+    const snap = await db
+      .collection("employees")
+      .orderBy("empId", "asc")
+      .get();
 
     employees = [];
     snap.forEach(doc => {
@@ -102,10 +121,7 @@ async function loadEmployees() {
     });
 
     setText("statusText", `Loaded ${employees.length} record(s).`);
-    setText(
-      "empCount",
-      `Total Employees: ${getUniqueEmpCount()}`
-    );
+    setText("empCount", `Total Employees: ${getUniqueEmpCount()}`);
 
     renderGroupCards();
     renderStatusCards();
@@ -314,9 +330,12 @@ function closeEmployeeModal() {
   const tbody = $("transferTableBody");
   if (tbody) {
     tbody.innerHTML =
-      `<tr><td colspan="8" class="status">Save the employee and then add transfer records.</td></tr>`;
+      `<tr><td colspan="7" class="status">Save the employee and then add transfer records.</td></tr>`;
   }
   setText("transferStatusText", "");
+
+  const deleteBtn = $("deleteBtn");
+  if (deleteBtn) deleteBtn.disabled = true;
 }
 
 function getAllFieldIds() {
@@ -342,7 +361,14 @@ function getAllFieldIds() {
 function clearEmployeeForm() {
   getAllFieldIds().forEach(id => {
     const el = $(id);
-    if (el) el.value = "";
+    if (el) {
+      if (el.tagName === "SELECT") {
+        // Reset to Pending for dropdowns
+        el.value = "Pending";
+      } else {
+        el.value = "";
+      }
+    }
   });
 }
 
@@ -373,9 +399,12 @@ function openNewEmployee() {
   const tbody = $("transferTableBody");
   if (tbody) {
     tbody.innerHTML =
-      `<tr><td colspan="8" class="status">Save the employee and then add transfer records.</td></tr>`;
+      `<tr><td colspan="7" class="status">Save the employee and then add transfer records.</td></tr>`;
   }
   setText("transferStatusText", "");
+
+  const deleteBtn = $("deleteBtn");
+  if (deleteBtn) deleteBtn.disabled = true;
 
   openEmployeeModal();
 }
@@ -388,15 +417,18 @@ function openEmployeeForView(empId) {
   currentTransferKey = (emp.empId || emp.emp_id || "").toString().trim();
   viewOnlyMode = true;
 
- setText("modalTitle", emp.empName || emp.name || "");
+  setText("modalTitle", emp.empName || emp.name || "");
   setText("modalStatus", "");
 
   fillEmployeeForm(emp);
-  
+
   setFormReadOnly(true);
 
   const badge = $("editBadge");
   if (badge) badge.style.display = "inline-flex";
+
+  const deleteBtn = $("deleteBtn");
+  if (deleteBtn) deleteBtn.disabled = false;
 
   loadTransferHistoryForCurrentEmp();
   openEmployeeModal();
@@ -462,28 +494,29 @@ function fillEmployeeForm(emp) {
     emp.probationStatus ||
     emp.ProbationStatus ||
     emp["Probation Status"] ||
-    "";
+    "Pending";
 
   $("empCharacterStatus").value =
     emp.characterStatus ||
     emp["Police Verification Status"] ||
     emp.policeVerificationStatus ||
-    "";
+    "Pending";
 
   $("empCasteStatus").value =
     emp.casteStatus ||
     emp["Caste Verification Status"] ||
-    "";
+    "Pending";
 
   $("empConfirmationStatus").value =
     emp.confirmationStatus ||
     emp["Confirmation Status"] ||
     emp.confirmStatus ||
-    "";
-applyPendingHighlight("empProbationStatus", emp.probationStatus);
-applyPendingHighlight("empCharacterStatus", emp.characterStatus);
-applyPendingHighlight("empCasteStatus", emp.casteStatus);
-applyPendingHighlight("empConfirmationStatus", emp.confirmationStatus);
+    "Pending";
+
+  applyPendingHighlight("empProbationStatus", $("empProbationStatus").value);
+  applyPendingHighlight("empCharacterStatus", $("empCharacterStatus").value);
+  applyPendingHighlight("empCasteStatus", $("empCasteStatus").value);
+  applyPendingHighlight("empConfirmationStatus", $("empConfirmationStatus").value);
 }
 
 /* ================== Save Employee ================== */
@@ -500,10 +533,10 @@ function getEmployeeFromForm() {
     retirementDate: $("empRetirement").value.trim(),
     dojBranch: $("empDojBranch").value.trim(),
     dojAU: $("empDojAU").value.trim(),
-    probationStatus: $("empProbationStatus").value,
-    characterStatus: $("empCharacterStatus").value,
-    casteStatus: $("empCasteStatus").value,
-    confirmationStatus: $("empConfirmationStatus").value
+    probationStatus: $("empProbationStatus").value || "Pending",
+    characterStatus: $("empCharacterStatus").value || "Pending",
+    casteStatus: $("empCasteStatus").value || "Pending",
+    confirmationStatus: $("empConfirmationStatus").value || "Pending"
   };
 }
 
@@ -537,6 +570,49 @@ async function saveEmployee() {
   }
 }
 
+/* ================== Delete Employee (with transfer history) ================== */
+async function deleteEmployee() {
+  const statusEl = $("modalStatus");
+
+  if (!currentEmployeeId) {
+    statusEl.textContent = "No employee selected.";
+    return;
+  }
+
+  const empIdToDelete = currentTransferKey || $("empId").value.trim();
+
+  if (!confirm("Are you sure you want to delete this employee and all related transfer records?")) {
+    return;
+  }
+
+  statusEl.textContent = "Deleting employee and related transfer records...";
+
+  try {
+    // Delete employee document
+    await empCollection.doc(currentEmployeeId).delete();
+
+    // Delete transfer history for this employee
+    if (empIdToDelete) {
+      const snap = await transferCollection
+        .where("empId", "==", String(empIdToDelete))
+        .get();
+
+      if (!snap.empty) {
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      }
+    }
+
+    statusEl.textContent = "Employee and transfer records deleted.";
+    closeEmployeeModal();
+    await loadEmployees();
+  } catch (err) {
+    console.error("Error deleting employee", err);
+    statusEl.textContent = "Error deleting employee.";
+  }
+}
+
 /* ================== Excel Download (filtered) ================== */
 function downloadFilteredToExcel() {
   const rows = getFilteredEmployees();
@@ -552,18 +628,18 @@ function downloadFilteredToExcel() {
     "Caste Verification Status","Confirmation Status"
   ];
 
-  const csvRows = [headers.join(",")];
+  const data = [headers];
 
   rows.forEach(e => {
-    const row = [
-      e.empId || e.emp_id || "",
+    data.push([
+      e.empId || "",
       e.empName || e.name || "",
       e.designation || "",
-      e.group || e.cadre || "",
+      e.group || "",
       e.branch || "",
       e.gender || "",
       e.dob || "",
-      e.retirement || "",
+      e.retirementDate || "",
       e.dojBranch || "",
       e.dojAU || "",
       e.contact || "",
@@ -571,33 +647,17 @@ function downloadFilteredToExcel() {
       e.characterStatus || "",
       e.casteStatus || "",
       e.confirmationStatus || ""
-    ];
-
-    const escaped = row.map(v => {
-      const s = (v || "").toString();
-      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
-    });
-
-    csvRows.push(escaped.join(","));
+    ]);
   });
 
-  const blob = new Blob([csvRows.join("\r\n")], {
-    type: "text/csv;charset=utf-8;"
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "employees_filtered.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Employees");
+
+  XLSX.writeFile(wb, "employees_filtered.xlsx");
 }
 
-/* ================== Transfer History (top-level collection) ================== */
+/* ================== Transfer History (ORDER DATE REMOVED) ================== */
 async function loadTransferHistoryForCurrentEmp() {
   const tbody = $("transferTableBody");
   const statusEl = $("transferStatusText");
@@ -605,7 +665,7 @@ async function loadTransferHistoryForCurrentEmp() {
 
   if (!currentTransferKey) {
     tbody.innerHTML =
-      `<tr><td colspan="8" class="status">Save the employee and then add transfer records.</td></tr>`;
+      `<tr><td colspan="7" class="status">Save the employee and then add transfer records.</td></tr>`;
     statusEl.textContent = "";
     return;
   }
@@ -622,7 +682,7 @@ async function loadTransferHistoryForCurrentEmp() {
 
     if (!records.length) {
       tbody.innerHTML =
-        `<tr><td colspan="8" class="status">No transfer records found.</td></tr>`;
+        `<tr><td colspan="7" class="status">No transfer records found.</td></tr>`;
       statusEl.textContent = "";
       return;
     }
@@ -634,7 +694,9 @@ async function loadTransferHistoryForCurrentEmp() {
 
     records.forEach(rec => {
       const tr = document.createElement("tr");
-      const tenureText = computeTenureYMD(rec.fromDate, rec.toDate);   function td(txt) {
+      const tenureText = computeTenureYMD(rec.fromDate, rec.toDate);
+
+      function td(txt) {
         const el = document.createElement("td");
         el.textContent = txt || "";
         return el;
@@ -642,7 +704,6 @@ async function loadTransferHistoryForCurrentEmp() {
 
       tr.appendChild(td(i++));           // Sl. No.
       tr.appendChild(td(rec.orderNo));   // Order No.
-      tr.appendChild(td(rec.orderDate)); // Order Date
       tr.appendChild(td(rec.branch));    // Branch
       tr.appendChild(td(rec.fromDate));  // From Date
       tr.appendChild(td(rec.toDate));    // To Date
@@ -664,12 +725,12 @@ async function loadTransferHistoryForCurrentEmp() {
   } catch (err) {
     console.error("Error loading transfer history", err);
     tbody.innerHTML =
-      `<tr><td colspan="8" class="status">Error loading transfer records.</td></tr>`;
+      `<tr><td colspan="7" class="status">Error loading transfer records.</td></tr>`;
     statusEl.textContent = "Error loading transfer records.";
   }
 }
 
-/* Add transfer record – Branch, From Date, To Date, Order No, Order Date */
+/* Add transfer record – Branch, From Date, To Date, Order No (NO Order Date) */
 async function handleAddTransferRecordInline() {
   const statusEl = $("transferStatusText");
 
@@ -683,7 +744,6 @@ async function handleAddTransferRecordInline() {
   const fromDate = $("tfFromDate").value;
   const toDate   = $("tfToDate").value;
   const orderNo  = $("tfOrderNo").value.trim();
-  const orderDate= $("tfOrderDate").value;
 
   if (!branch || !fromDate || !toDate) {
     statusEl.textContent = "All fields in transfer form are required.";
@@ -700,7 +760,6 @@ async function handleAddTransferRecordInline() {
       fromDate,
       toDate,
       orderNo,
-      orderDate,
       tenure,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -709,7 +768,6 @@ async function handleAddTransferRecordInline() {
     $("tfFromDate").value = "";
     $("tfToDate").value = "";
     $("tfOrderNo").value = "";
-    $("tfOrderDate").value = "";
 
     statusEl.textContent = "Transfer record added.";
     loadTransferHistoryForCurrentEmp();
@@ -759,4 +817,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   $("addTransferBtn").addEventListener("click", handleAddTransferRecordInline);
+
+  const deleteBtn = $("deleteBtn");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", deleteEmployee);
+  }
 });
