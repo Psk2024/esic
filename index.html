@@ -59,9 +59,9 @@
             <th>Branch</th>
           </tr>
         </thead>
-      <tbody id="employeeTableBody">
-    <!-- JS will insert rows here -->
-  </tbody>
+        <tbody id="employeeTableBody">
+          <!-- JS will insert rows here -->
+        </tbody>
       </table>
     </div>
 
@@ -79,7 +79,6 @@
           style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"
         >
           <strong style="font-size:13px;">Details</strong>
-       
         </div>
 
         <!-- EMPLOYEE FORM GRID -->
@@ -130,12 +129,11 @@
             <input type="text" id="empContact" />
           </div>
           <br>
-          <!-- Status (no dates now) -->
+          <!-- Status (default Pending) -->
           <div class="field">
             <label for="empProbationStatus">Probation Status</label>
             <select id="empProbationStatus">
-              <option value="">-- Select --</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending" selected>Pending</option>
               <option value="Completed">Completed</option>
               <option value="Not Applicable">Not Applicable</option>
             </select>
@@ -144,8 +142,7 @@
           <div class="field">
             <label for="empCharacterStatus">Police Verification Status</label>
             <select id="empCharacterStatus">
-              <option value="">-- Select --</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending" selected>Pending</option>
               <option value="Completed">Completed</option>
               <option value="Not Applicable">Not Applicable</option>
             </select>
@@ -154,8 +151,7 @@
           <div class="field">
             <label for="empCasteStatus">Caste Verification Status</label>
             <select id="empCasteStatus">
-              <option value="">-- Select --</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending" selected>Pending</option>
               <option value="Completed">Completed</option>
               <option value="Not Applicable">Not Applicable</option>
             </select>
@@ -164,15 +160,14 @@
           <div class="field">
             <label for="empConfirmationStatus">Confirmation Status</label>
             <select id="empConfirmationStatus">
-              <option value="">-- Select --</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending" selected>Pending</option>
               <option value="Completed">Completed</option>
               <option value="Not Applicable">Not Applicable</option>
             </select>
           </div>
         </div>
 
-        <!-- === TRANSFER HISTORY SECTION (NEW) === -->
+        <!-- === TRANSFER HISTORY SECTION (ORDER DATE REMOVED) === -->
         <hr style="margin:12px 0;" />
         <div class="transfer-section">
           <strong style="font-size:13px;display:block;margin-bottom:6px;">
@@ -186,7 +181,6 @@
                 <tr>
                   <th style="width:40px;">Sl. No.</th>
                   <th>Order No.</th>
-                  <th>Order Date</th>
                   <th>Branch</th>
                   <th>From Date</th>
                   <th>To Date</th>
@@ -196,7 +190,7 @@
               </thead>
               <tbody id="transferTableBody">
                 <tr>
-                  <td colspan="8" class="status">
+                  <td colspan="7" class="status">
                     Save the employee and then add transfer records.
                   </td>
                 </tr>
@@ -204,34 +198,28 @@
             </table>
           </div>
 
-          <!-- Add transfer form -->
-         <div class="form-grid" style="margin-top:8px;">
+          <!-- Add transfer form (Order Date removed) -->
+          <div class="form-grid" style="margin-top:8px;">
             <div class="field">
-    <label for="tfOrderNo">Order No.</label>
-    <input type="text" id="tfOrderNo" placeholder="e.g. 203 of 2025" />
-  </div>
+              <label for="tfOrderNo">Order No.</label>
+              <input type="text" id="tfOrderNo" placeholder="e.g. 203 of 2025" />
+            </div>
 
-  <div class="field">
-    <label for="tfOrderDate">Order Date</label>
-    <input type="date" id="tfOrderDate" />
-  </div>
-  <div class="field">
-    <label for="tfBranch">Branch</label>
-    <input type="text" id="tfBranch" placeholder="e.g. Establishment Branch" />
-  </div>
+            <div class="field">
+              <label for="tfBranch">Branch</label>
+              <input type="text" id="tfBranch" placeholder="e.g. Establishment Branch" />
+            </div>
 
-  <div class="field">
-    <label for="tfFromDate">From Date</label>
-    <input type="date" id="tfFromDate" />
-  </div>
+            <div class="field">
+              <label for="tfFromDate">From Date</label>
+              <input type="date" id="tfFromDate" />
+            </div>
 
-  <div class="field">
-    <label for="tfToDate">To Date</label>
-    <input type="date" id="tfToDate" />
-  </div>
-
- 
-</div>
+            <div class="field">
+              <label for="tfToDate">To Date</label>
+              <input type="date" id="tfToDate" />
+            </div>
+          </div>
 
           <div
             style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"
@@ -248,11 +236,7 @@
           <button class="btn-primary" id="saveBtn">Save</button>
           <button class="btn-secondary" id="editBtn" type="button">Edit</button>
           <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
-          <button class="btn-danger" id="deleteBtn" disabled>Delete</button>
-
-          <!-- CSV Import -->
-          <button class="btn-secondary" id="importBtn" type="button">Import CSV</button>
-          <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
+          <button class="btn-danger" id="deleteBtn" type="button" disabled>Delete</button>
         </div>
 
         <div id="modalStatus" class="status"></div>
@@ -263,6 +247,8 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- XLSX for Download Excel only -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <!-- Main logic -->
   <script src="app.js"></script>
